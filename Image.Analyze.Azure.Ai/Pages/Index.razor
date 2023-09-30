@@ -1,0 +1,30 @@
+﻿
+
+@page "/"
+
+<h1>Hello, world!</h1>
+
+Welcome to your new app.
+
+<SurveyPrompt Title="How is Blazor working for you?" />
+
+
+@code {
+
+    //https://learn.microsoft.com/en-us/azure/ai-services/computer-vision/how-to/call-analyze-image-40?WT.mc_id=twitter&pivots=programming-language-csharp
+ 
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        VisionSource
+        // using var imageSource = VisionSource.FromFile("miss-africa.jpg");
+
+
+        return base.OnAfterRenderAsync(firstRender);
+    }
+    }
+
+
+  
+
+
+}
