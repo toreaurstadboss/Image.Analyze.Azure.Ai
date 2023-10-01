@@ -42,7 +42,14 @@ Welcome to your new app.
         {
             Language = "en",
             GenderNeutralCaption = false,
-                Features = ImageAnalysisFeature.Caption
+                Features =
+              ImageAnalysisFeature.CropSuggestions
+            | ImageAnalysisFeature.Caption
+            | ImageAnalysisFeature.DenseCaptions
+            | ImageAnalysisFeature.Objects
+            | ImageAnalysisFeature.People
+            | ImageAnalysisFeature.Text
+            | ImageAnalysisFeature.Tags
         };
 
         string key = Environment.GetEnvironmentVariable("AZURE_COGNITIVE_SERVICES_VISION_SECONDARY_KEY");
