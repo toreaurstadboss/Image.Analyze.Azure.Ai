@@ -53,16 +53,16 @@
       <None Remove="miss-africa.jpg" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Content Include="miss-africa.jpg">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-    </ItemGroup>
-
 	<ItemGroup>
 		<PackageReference Include="Azure.AI.Vision.ImageAnalysis" Version="0.15.1-beta.1" />
 		<PackageReference Include="Microsoft.Azure.CognitiveServices.Vision.ComputerVision" Version="7.0.1" />
 		<PackageReference Include="TextCopy" Version="6.2.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Content Update="wwwroot\miss-africa.jpg">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
 	</ItemGroup>
 
 </Project>
