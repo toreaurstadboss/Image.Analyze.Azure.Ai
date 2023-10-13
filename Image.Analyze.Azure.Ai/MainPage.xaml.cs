@@ -1,9 +1,10 @@
-﻿namespace Image.Analyze.Azure.Ai;
-
-public partial class MainPage : ContentPage
+﻿namespace Image.Analyze.Azure.Ai
 {
-	public MainPage()
-	{
-		InitializeComponent();
-	}
+    public partial class MainPage : ContentPage
+    {
+        public MainPage()
+        {
+            InitializeComponent();
+        }
+    }
 }

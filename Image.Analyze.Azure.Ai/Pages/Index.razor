@@ -1,21 +1,55 @@
-﻿
-
-@page "/"
+﻿@page "/"
 @using System.Text;
+@using Image.Analyze.Azure.Ai.Models;
+@using Ocr.Handwriting.Azure.AI.Services;
 @using global::Azure.AI.Vision.Common;
 @using global::Azure.AI.Vision.ImageAnalysis;
 @using global::Azure;
 
-<h1>Hello, world!</h1>
+@inject IImageSaveService ImageSaveService
 
-Welcome to your new app.
+<h1>Image Analyzer</h1>
 
-<SurveyPrompt Title="ImageResults from Azure Computer vision service :" />
+App that load and analyze using Azure Cognitive Services - Image Vision Analyzing service.
 
 <span>@ImageInfo</span>
 
+<EditForm Model="Model" OnValidSubmit="@Submit" style="background-color:aliceblue">
+    <DataAnnotationsValidator />
+    <label><b>Select a picture to run OCR</b></label><br />
+    <InputFile OnChange="@OnInputFile" accept=".jpeg,.jpg,.png" />
+    <br />
+    <code class="alert-secondary">Supported file formats: .jpeg, .jpg and .png</code>
+    <br />
+    @if (Model.PreviewImageUrl != null)
+    {
+        <label class="alert-info">Preview of the selected image</label>
+        <div style="overflow:auto;max-height:300px;max-width:500px">
+            <img class="flagIcon" src="@Model.PreviewImageUrl" /><br />
+        </div>
+
+        <code class="alert-light">File Size (kB): @Model.FileSize</code>
+        <br />
+        <code class="alert-light">File saved location: @Model.SavedFilePath</code>
+        <br />
+
+        <label class="alert-info">Click the button below to start running OCR using Azure AI</label>
+
+        <br />
+        <br />
+        <button type="submit">Submit</button> <button style="margin-left:200px" type="button" class="btn-outline-info" @onclick="@CopyTextToClipboard">Copy to clipboard</button>
+        <br />
+        <br />
+        <InputTextArea style="width:1000px;height:300px" readonly="readonly" placeholder="Detected text in the image uploaded" @bind-Value="Model!.OcrOutputText" rows="5"></InputTextArea>
+    }
+</EditForm>
+
 
 @code {
+
+    private IndexModel Model = new();
+
+
     //https://learn.microsoft.com/en-us/azure/ai-services/computer-vision/how-to/call-analyze-image-40?WT.mc_id=twitter&pivots=programming-language-csharp
 
     private string ImageInfo = "";
@@ -57,8 +91,8 @@ Welcome to your new app.
 
         var visionServiceOptions = new VisionServiceOptions(new Uri(endpoint), new AzureKeyCredential(key));
 
-    //using var  imageSource = VisionSource.FromUrl(
-    //new Uri("https://learn.microsoft.com/azure/ai-services/computer-vision/media/quickstarts/presentation.png"));
+        //using var  imageSource = VisionSource.FromUrl(
+        //new Uri("https://learn.microsoft.com/azure/ai-services/computer-vision/media/quickstarts/presentation.png"));
 
         using var analyzer = new ImageAnalyzer(visionServiceOptions, imageSource, analysisOptions);
 
@@ -160,6 +194,30 @@ Welcome to your new app.
 
         ImageInfo = sb.ToString();
 
+    }
+
+    private async Task Submit()
+    {
+        if (Model.PreviewImageUrl == null || Model.SavedFilePath == null)
+        {
+            await Application.Current.MainPage.DisplayAlert($"MAUI Blazor OCR App", $"You must select an image first before running OCR. Supported formats are .jpeg, .jpg and .png", "Ok", "Cancel");
+            return;
+        }
+        // Model.OcrOutputText = await OcrImageService.GetReadResultsText(Model.SavedFilePath);
+        StateHasChanged(); //visual refresh here
+    }
+
+    private async Task CopyTextToClipboard()
+    {
+        await Clipboard.SetTextAsync(Model.OcrOutputText);
+        await Application.Current.MainPage.DisplayAlert($"MAUI Blazor OCR App", $"The copied text was put into the clipboard. Character length: {Model.OcrOutputText?.Length}", "Ok", "Cancel");
+    }
+
+    private async Task OnInputFile(InputFileChangeEventArgs args)
+    {
+        var imageSaveModel = await ImageSaveService.SaveImage(args.File);
+        Model = new IndexModel(imageSaveModel);
+        await Application.Current.MainPage.DisplayAlert($"MAUI Blazor OCR App", $"Wrote file to location : {Model.SavedFilePath} Size is: {Model.FileSize} kB", "Ok", "Cancel");
     }
     
 

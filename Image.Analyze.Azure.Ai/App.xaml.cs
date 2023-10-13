@@ -1,11 +1,12 @@
-﻿namespace Image.Analyze.Azure.Ai;
-
-public partial class App : Application
+﻿namespace Image.Analyze.Azure.Ai
 {
-	public App()
-	{
-		InitializeComponent();
+    public partial class App : Application
+    {
+        public App()
+        {
+            InitializeComponent();
 
-		MainPage = new MainPage();
-	}
+            MainPage = new MainPage();
+        }
+    }
 }
