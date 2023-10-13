@@ -29,12 +29,12 @@ App that load and analyze using Azure Cognitive Services - Image Vision Analyzin
     {
         <label class="alert-info">Preview of the selected image</label>
         <div>
-            <img id="PreviewImage" src="@Model.PreviewImageUrl" /><br />
+            <img id="PreviewImage" src="@Model.PreviewImageUrl" onload="rescaleCanvas()" /><br />
         </div>
 
         <label class="alert-info">Image with bounding boxes</label>
         <div>
-            <canvas id="PreviewImageBbox" class="flagIcon">
+            <canvas id="PreviewImageBbox" style="border:solid 1px black">
             </canvas>            
             <br />
         </div>

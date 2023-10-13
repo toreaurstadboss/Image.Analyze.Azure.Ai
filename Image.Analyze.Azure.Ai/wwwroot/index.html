@@ -25,6 +25,14 @@
 	<script src="_framework/blazor.webview.js" autostart="false"></script>
 
 	<script type="text/javascript">
+
+		function rescaleCanvas() {
+            var img = document.getElementById('PreviewImage');
+            var canvas = document.getElementById('PreviewImageBbox');
+            canvas.width = img.width;
+            canvas.height = img.height;
+		}
+
 		function LoadBoundingBoxes(objectDescriptions) {
 			if (objectDescriptions == null || objectDescriptions == false) {
                 alert('did not find any objects in image. returning from calling load bounding boxes : ' + objectDescriptions);
@@ -35,13 +43,23 @@
 			var objectDesc = JSON.parse(objectDescriptions);
 			alert('calling load bounding boxes, starting analysis on clientside js : ' + objectDescriptions);
 
-			var img = document.getElementById('PreviewImage');
-			var canvas = canvas = document.getElementById('PreviewImageBbox');
+			rescaleCanvas();
+            var canvas = document.getElementById('PreviewImageBbox');
+            var img = document.getElementById('PreviewImage');
+			
 			var ctx = canvas.getContext('2d');
-			ctx.drawImage(img, 500, 300);
+			ctx.drawImage(img, img.width, img.height);
+
+			ctx.font = "30px Verdana";
+
+			for (var i = 0; i < objectDesc.length; i++) {
+				ctx.beginPath();
+				ctx.strokeStyle = "black";
+				ctx.fillText(objectDesc[i].Name, objectDesc[i].X + objectDesc[i].Width / 2, objectDesc[i].Y + objectDesc[i].Height / 2);
+			}
 
             for (var i = 0; i < objectDesc.length; i++) {
-				ctx.beginPath();
+				ctx.strokeStyle = "blue";
 				ctx.rect(objectDesc[i].X, objectDesc[i].Y, objectDesc[i].Width, objectDesc[i].Height);
 				ctx.stroke();
             }
