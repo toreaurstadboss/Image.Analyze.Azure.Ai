@@ -25,8 +25,30 @@
 	<script src="_framework/blazor.webview.js" autostart="false"></script>
 
 	<script type="text/javascript">
-		function LoadBoundingBoxes() {
-			alert('calling load bounding boxes');
+		function LoadBoundingBoxes(objectDescriptions) {
+			if (objectDescriptions == null || objectDescriptions == false) {
+                alert('did not find any objects in image. returning from calling load bounding boxes : ' + objectDescriptions);
+
+				return;
+			}
+			debugger;
+			var objectDesc = JSON.parse(objectDescriptions);
+			alert('calling load bounding boxes, starting analysis on clientside js : ' + objectDescriptions);
+
+			var img = document.getElementById('PreviewImage');
+			var canvas = canvas = document.getElementById('PreviewImageBbox');
+			var ctx = canvas.getContext('2d');
+			ctx.drawImage(img, 500, 300);
+
+            for (var i = 0; i < objectDesc.length; i++) {
+				ctx.beginPath();
+				ctx.rect(objectDesc[i].X, objectDesc[i].Y, objectDesc[i].Width, objectDesc[i].Height);
+				ctx.stroke();
+            }
+
+			console.log('got these object descriptions:');
+			console.log(objectDescriptions);
+
 		}
 	</script>
 

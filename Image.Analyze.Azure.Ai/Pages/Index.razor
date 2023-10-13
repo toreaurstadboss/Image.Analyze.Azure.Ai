@@ -21,15 +21,22 @@ App that load and analyze using Azure Cognitive Services - Image Vision Analyzin
 <EditForm Model="Model" OnValidSubmit="@Submit" style="background-color:aliceblue">
     <DataAnnotationsValidator />
     <label><b>Select a picture to run OCR</b></label><br />
-    <InputFile OnChange="@OnInputFile" accept=".jpeg,.jpg,.png" />
+    <InputFile OnChange="@OnInputFile" accept=".jpeg,.jpg,.png" />Previ
     <br />
     <code class="alert-secondary">Supported file formats: .jpeg, .jpg and .png</code>
     <br />
     @if (Model.PreviewImageUrl != null)
     {
         <label class="alert-info">Preview of the selected image</label>
-        <div style="overflow:auto;max-height:500px;max-width:700px">
-            <img id="PreviewImage" class="flagIcon" src="@Model.PreviewImageUrl" /><br />
+        <div>
+            <img id="PreviewImage" src="@Model.PreviewImageUrl" /><br />
+        </div>
+
+        <label class="alert-info">Image with bounding boxes</label>
+        <div>
+            <canvas id="PreviewImageBbox" class="flagIcon">
+            </canvas>            
+            <br />
         </div>
 
         <code class="alert-light">File Size (kB): @Model.FileSize</code>
@@ -72,7 +79,25 @@ App that load and analyze using Azure Cognitive Services - Image Vision Analyzin
         if (analysisResult.Reason == ImageAnalysisResultReason.Analyzed)
         {
             Model.ImageAnalysisOutputText = analysisResult.OutputImageAnalysisResult();
-            JsRunTime.InvokeVoidAsync("LoadBoundingBoxes");
+            var sb = new StringBuilder();
+            sb.AppendLine(@"[");
+
+            int objectIndex = 0;
+            foreach (var detectedObject in analysisResult.Objects){
+                sb.Append($"{{ \"Name\": \"{detectedObject.Name}\", \"Y\": {detectedObject.BoundingBox.Y}, \"X\": {detectedObject.BoundingBox.X}, \"Height\": {detectedObject.BoundingBox.Height}, \"Width\": {detectedObject.BoundingBox.Width}, \"Confidence\": \"{detectedObject.Confidence:0.0000}\" }}");
+                objectIndex++;
+                if (objectIndex < analysisResult.Objects?.Count)
+                {
+                    sb.Append($",{Environment.NewLine}");                    
+                }
+                else
+                {
+                    sb.Append($"{Environment.NewLine}");
+                }
+            }
+            sb.Remove(sb.Length - 2, 1); //remove trailing comma at the end
+            sb.AppendLine(@"]");
+            await JsRunTime.InvokeVoidAsync("LoadBoundingBoxes", sb.ToString());
 
         }
         else
