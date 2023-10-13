@@ -10,6 +10,7 @@
 
 @inject IImageSaveService ImageSaveService
 @inject IImageAnalyzerService ImageAnalyzerService
+@inject IJSRuntime JsRunTime
 
 <h1>Image Analyzer</h1>
 
@@ -28,7 +29,7 @@ App that load and analyze using Azure Cognitive Services - Image Vision Analyzin
     {
         <label class="alert-info">Preview of the selected image</label>
         <div style="overflow:auto;max-height:500px;max-width:700px">
-            <img class="flagIcon" src="@Model.PreviewImageUrl" /><br />
+            <img id="PreviewImage" class="flagIcon" src="@Model.PreviewImageUrl" /><br />
         </div>
 
         <code class="alert-light">File Size (kB): @Model.FileSize</code>
@@ -71,11 +72,14 @@ App that load and analyze using Azure Cognitive Services - Image Vision Analyzin
         if (analysisResult.Reason == ImageAnalysisResultReason.Analyzed)
         {
             Model.ImageAnalysisOutputText = analysisResult.OutputImageAnalysisResult();
+            JsRunTime.InvokeVoidAsync("LoadBoundingBoxes");
+
         }
         else
         {
             ImageInfo = $"The image analysis did not perform its analysis. Reason: {analysisResult.Reason}";
         }
+
 
         StateHasChanged(); //visual refresh here
     }
@@ -91,9 +95,7 @@ App that load and analyze using Azure Cognitive Services - Image Vision Analyzin
         var imageSaveModel = await ImageSaveService.SaveImage(args.File);
         Model = new IndexModel(imageSaveModel);
         await Application.Current.MainPage.DisplayAlert($"MAUI Blazor ImageAnalyzer app App", $"Wrote file to location : {Model.SavedFilePath} Size is: {Model.FileSize} kB", "Ok", "Cancel");
-    }
-    
-
+    }  
 
 
 }
