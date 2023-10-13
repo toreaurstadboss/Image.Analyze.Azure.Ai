@@ -1,7 +1,6 @@
-﻿using Microsoft.AspNetCore.Components.WebView.Maui;
-using Image.Analyze.Azure.Ai.Data;
-using TextCopy;
+﻿using Image.Analyze.Azure.Ai.Lib;
 using Ocr.Handwriting.Azure.AI.Services;
+using TextCopy;
 
 namespace Image.Analyze.Azure.Ai
 {
@@ -22,8 +21,8 @@ namespace Image.Analyze.Azure.Ai
             builder.Services.AddBlazorWebViewDeveloperTools();
 #endif
 
-            builder.Services.AddSingleton<WeatherForecastService>();
             builder.Services.AddScoped<IImageSaveService, ImageSaveService>();
+            builder.Services.AddScoped<IImageAnalyzerService, ImageAnalyzerService>();
             builder.Services.InjectClipboard();
             return builder.Build();
         }

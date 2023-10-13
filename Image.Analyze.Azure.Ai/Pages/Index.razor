@@ -1,12 +1,15 @@
 ﻿@page "/"
 @using System.Text;
+@using Image.Analyze.Azure.Ai.Lib;
 @using Image.Analyze.Azure.Ai.Models;
 @using Ocr.Handwriting.Azure.AI.Services;
 @using global::Azure.AI.Vision.Common;
 @using global::Azure.AI.Vision.ImageAnalysis;
 @using global::Azure;
+@using Image.Analyze.Azure.Ai.Extensions;
 
 @inject IImageSaveService ImageSaveService
+@inject IImageAnalyzerService ImageAnalyzerService
 
 <h1>Image Analyzer</h1>
 
@@ -24,7 +27,7 @@ App that load and analyze using Azure Cognitive Services - Image Vision Analyzin
     @if (Model.PreviewImageUrl != null)
     {
         <label class="alert-info">Preview of the selected image</label>
-        <div style="overflow:auto;max-height:300px;max-width:500px">
+        <div style="overflow:auto;max-height:500px;max-width:700px">
             <img class="flagIcon" src="@Model.PreviewImageUrl" /><br />
         </div>
 
@@ -40,7 +43,7 @@ App that load and analyze using Azure Cognitive Services - Image Vision Analyzin
         <button type="submit">Submit</button> <button style="margin-left:200px" type="button" class="btn-outline-info" @onclick="@CopyTextToClipboard">Copy to clipboard</button>
         <br />
         <br />
-        <InputTextArea style="width:1000px;height:300px" readonly="readonly" placeholder="Detected text in the image uploaded" @bind-Value="Model!.OcrOutputText" rows="5"></InputTextArea>
+        <InputTextArea style="width:1000px;height:300px" readonly="readonly" placeholder="Detected text in the image uploaded" @bind-Value="Model!.ImageAnalysisOutputText" rows="5"></InputTextArea>
     }
 </EditForm>
 
@@ -49,175 +52,45 @@ App that load and analyze using Azure Cognitive Services - Image Vision Analyzin
 
     private IndexModel Model = new();
 
-
     //https://learn.microsoft.com/en-us/azure/ai-services/computer-vision/how-to/call-analyze-image-40?WT.mc_id=twitter&pivots=programming-language-csharp
 
-    private string ImageInfo = "";
-
-    protected override async Task OnParametersSetAsync()
-    {
-
-        using var stream = await FileSystem.OpenAppPackageFileAsync("wwwroot/miss-africa.jpg");
-
-        using var reader = new StreamReader(stream);
-        byte[] imageBuffer;
-        using (var streamReader = new MemoryStream())
-        {
-            stream.CopyTo(streamReader);
-            imageBuffer = streamReader.ToArray();
-        }
-
-        using var imageSourceBuffer = new ImageSourceBuffer();
-        imageSourceBuffer.GetWriter().Write(imageBuffer);
-        using var imageSource = VisionSource.FromImageSourceBuffer(imageSourceBuffer);
-
-
-        var analysisOptions = new ImageAnalysisOptions()  
-        {
-            Language = "en",
-            GenderNeutralCaption = false,
-                Features =
-              ImageAnalysisFeature.CropSuggestions
-            | ImageAnalysisFeature.Caption
-            | ImageAnalysisFeature.DenseCaptions
-            | ImageAnalysisFeature.Objects
-            | ImageAnalysisFeature.People
-            | ImageAnalysisFeature.Text
-            | ImageAnalysisFeature.Tags
-        };
-
-        string key = Environment.GetEnvironmentVariable("AZURE_COGNITIVE_SERVICES_VISION_SECONDARY_KEY");
-        string endpoint = Environment.GetEnvironmentVariable("AZURE_COGNITIVE_SERVICES_VISION_SECONDARY_ENDPOINT");
-
-        var visionServiceOptions = new VisionServiceOptions(new Uri(endpoint), new AzureKeyCredential(key));
-
-        //using var  imageSource = VisionSource.FromUrl(
-        //new Uri("https://learn.microsoft.com/azure/ai-services/computer-vision/media/quickstarts/presentation.png"));
-
-        using var analyzer = new ImageAnalyzer(visionServiceOptions, imageSource, analysisOptions);
-
-        ImageInfo = "";
-
-        var result = await analyzer.AnalyzeAsync();
-        var sb = new StringBuilder();
-
-        if (result.Reason == ImageAnalysisResultReason.Analyzed)
-        {
-
-            sb.AppendLine($" Image height = {result.ImageHeight}");
-            sb.AppendLine($" Image width = {result.ImageWidth}");
-            sb.AppendLine($" Model version = {result.ModelVersion}");
-
-            if (result.Caption != null)
-            {
-                sb.AppendLine(" Caption:");
-                sb.AppendLine($"   \"{result.Caption.Content}\", Confidence {result.Caption.Confidence:0.0000}");
-            }
-
-            if (result.DenseCaptions != null)
-            {
-                sb.AppendLine(" Dense Captions:");
-                foreach (var caption in result.DenseCaptions)
-                {
-                    sb.AppendLine($"   \"{caption.Content}\", Bounding box {caption.BoundingBox}, Confidence {caption.Confidence:0.0000}");
-                }
-            }
-
-            if (result.Objects != null)
-            {
-                sb.AppendLine(" Objects:");
-                foreach (var detectedObject in result.Objects)
-                {
-                    sb.AppendLine($"   \"{detectedObject.Name}\", Bounding box {detectedObject.BoundingBox}, Confidence {detectedObject.Confidence:0.0000}");
-                }
-            }
-
-            if (result.Tags != null)
-            {
-                sb.AppendLine($" Tags:");
-                foreach (var tag in result.Tags)
-                {
-                    sb.AppendLine($"   \"{tag.Name}\", Confidence {tag.Confidence:0.0000}");
-                }
-            }
-
-            if (result.People != null)
-            {
-                sb.AppendLine($" People:");
-                foreach (var person in result.People)
-                {
-                    sb.AppendLine($"   Bounding box {person.BoundingBox}, Confidence {person.Confidence:0.0000}");
-                }
-            }
-
-            if (result.CropSuggestions != null)
-            {
-                sb.AppendLine($" Crop Suggestions:");
-                foreach (var cropSuggestion in result.CropSuggestions)
-                {
-                    sb.AppendLine($"   Aspect ratio {cropSuggestion.AspectRatio}: "
-                        + $"Crop suggestion {cropSuggestion.BoundingBox}");
-                };
-            }
-
-            if (result.Text != null)
-            {
-                sb.AppendLine($" Text:");
-                foreach (var line in result.Text.Lines)
-                {
-                    string pointsToString = "{" + string.Join(',', line.BoundingPolygon.Select(pointsToString => pointsToString.ToString())) + "}";
-                    sb.AppendLine($"   Line: '{line.Content}', Bounding polygon {pointsToString}");
-
-                    foreach (var word in line.Words)
-                    {
-                        pointsToString = "{" + string.Join(',', word.BoundingPolygon.Select(pointsToString => pointsToString.ToString())) + "}";
-                        sb.AppendLine($"     Word: '{word.Content}', Bounding polygon {pointsToString}, Confidence {word.Confidence:0.0000}");
-                    }
-                }
-            }
-
-            var resultDetails = ImageAnalysisResultDetails.FromResult(result);
-            sb.AppendLine($" Result details:");
-            sb.AppendLine($"   Image ID = {resultDetails.ImageId}");
-            sb.AppendLine($"   Result ID = {resultDetails.ResultId}");
-            sb.AppendLine($"   Connection URL = {resultDetails.ConnectionUrl}");
-            sb.AppendLine($"   JSON result = {resultDetails.JsonResult}");
-        }
-        else
-        {
-            var errorDetails = ImageAnalysisErrorDetails.FromResult(result);
-            sb.AppendLine(" Analysis failed.");
-            sb.AppendLine($"   Error reason : {errorDetails.Reason}");
-            sb.AppendLine($"   Error code : {errorDetails.ErrorCode}");
-            sb.AppendLine($"   Error message: {errorDetails.Message}");
-        }
-
-        ImageInfo = sb.ToString();
-
-    }
+    private string ImageInfo = string.Empty;
 
     private async Task Submit()
     {
         if (Model.PreviewImageUrl == null || Model.SavedFilePath == null)
         {
-            await Application.Current.MainPage.DisplayAlert($"MAUI Blazor OCR App", $"You must select an image first before running OCR. Supported formats are .jpeg, .jpg and .png", "Ok", "Cancel");
+            await Application.Current.MainPage.DisplayAlert($"MAUI Blazor Image Analyzer App", $"You must select an image first before running Image Analysis. Supported formats are .jpeg, .jpg and .png", "Ok", "Cancel");
             return;
         }
-        // Model.OcrOutputText = await OcrImageService.GetReadResultsText(Model.SavedFilePath);
+
+        using var imageAnalyzer = await ImageAnalyzerService.CreateImageAnalyzer(Model.SavedFilePath);
+
+        ImageAnalysisResult analysisResult = await imageAnalyzer.AnalyzeAsync();
+
+        if (analysisResult.Reason == ImageAnalysisResultReason.Analyzed)
+        {
+            Model.ImageAnalysisOutputText = analysisResult.OutputImageAnalysisResult();
+        }
+        else
+        {
+            ImageInfo = $"The image analysis did not perform its analysis. Reason: {analysisResult.Reason}";
+        }
+
         StateHasChanged(); //visual refresh here
     }
 
     private async Task CopyTextToClipboard()
     {
-        await Clipboard.SetTextAsync(Model.OcrOutputText);
-        await Application.Current.MainPage.DisplayAlert($"MAUI Blazor OCR App", $"The copied text was put into the clipboard. Character length: {Model.OcrOutputText?.Length}", "Ok", "Cancel");
+        await Clipboard.SetTextAsync(Model.ImageAnalysisOutputText);
+        await Application.Current.MainPage.DisplayAlert($"MAUI Blazor Image Analyzer App", $"The copied text was put into the clipboard. Character length: {Model.ImageAnalysisOutputText?.Length}", "Ok", "Cancel");
     }
 
     private async Task OnInputFile(InputFileChangeEventArgs args)
     {
         var imageSaveModel = await ImageSaveService.SaveImage(args.File);
         Model = new IndexModel(imageSaveModel);
-        await Application.Current.MainPage.DisplayAlert($"MAUI Blazor OCR App", $"Wrote file to location : {Model.SavedFilePath} Size is: {Model.FileSize} kB", "Ok", "Cancel");
+        await Application.Current.MainPage.DisplayAlert($"MAUI Blazor ImageAnalyzer app App", $"Wrote file to location : {Model.SavedFilePath} Size is: {Model.FileSize} kB", "Ok", "Cancel");
     }
     
 
