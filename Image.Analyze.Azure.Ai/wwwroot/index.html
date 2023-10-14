@@ -58,11 +58,15 @@
 				ctx.fillText(objectDesc[i].Name, objectDesc[i].X + objectDesc[i].Width / 2, objectDesc[i].Y + objectDesc[i].Height / 2);
 			}
 
-            for (var i = 0; i < objectDesc.length; i++) {
-				ctx.strokeStyle = "blue";
-				ctx.rect(objectDesc[i].X, objectDesc[i].Y, objectDesc[i].Width, objectDesc[i].Height);
+			for (var i = 0; i < objectDesc.length; i++) {
+				ctx.fillStyle = "blue";
+				ctx.globalAlpha = 0.2;
+				ctx.fillRect(objectDesc[i].X, objectDesc[i].Y, objectDesc[i].Width, objectDesc[i].Height);
 				ctx.stroke();
-            }
+			}
+
+            ctx.drawImage(img, 0, 0);
+
 
 			console.log('got these object descriptions:');
 			console.log(objectDescriptions);
