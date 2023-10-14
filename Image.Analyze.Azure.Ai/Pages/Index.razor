@@ -12,115 +12,57 @@
 @inject IImageAnalyzerService ImageAnalyzerService
 @inject IJSRuntime JsRunTime
 
-<h1>Image Analyzer</h1>
-
 App that load and analyze using Azure Cognitive Services - Image Vision Analyzing service.
 
 <span>@ImageInfo</span>
 
 <EditForm Model="Model" OnValidSubmit="@Submit" style="background-color:aliceblue">
     <DataAnnotationsValidator />
-    <label><b>Select a picture to run OCR</b></label><br />
-    <InputFile OnChange="@OnInputFile" accept=".jpeg,.jpg,.png" />Previ
-    <br />
-    <code class="alert-secondary">Supported file formats: .jpeg, .jpg and .png</code>
-    <br />
-    @if (Model.PreviewImageUrl != null)
-    {
-        <label class="alert-info">Preview of the selected image</label>
-        <div>
-            <img id="PreviewImage" src="@Model.PreviewImageUrl" onload="rescaleCanvas()" /><br />
+
+    <div>
+        <label><b>Select a picture to run Image Analysis with</b></label><br />
+        <InputFile OnChange="@OnInputFile" accept=".jpeg,.jpg,.png" />
+
+        <br />
+        <code class="alert-secondary">Supported file formats: .jpeg, .jpg and .png</code>
+        <br />
+    </div>
+
+    <div class="container">
+       <div class="row align-items-start">         
+            <div class="col overflow-scroll">
+                <label class="alert-info">Preview of the selected image</label>
+                <div>
+                    <img id="PreviewImage" style="min-width:640px;min-height:359px;border:1px solid black;" src="@Model.PreviewImageUrl" onload="rescaleCanvas()" /><br />
+                </div>
+            </div>
+            <div class="col overflow-scroll">
+                <label class="alert-info">Image with bounding boxes</label>
+                <canvas id="PreviewImageBbox" style="border:solid 1px black">
+                </canvas>
+                <br />
+            </div>
         </div>
-
-        <label class="alert-info">Image with bounding boxes</label>
-        <div>
-            <canvas id="PreviewImageBbox" style="border:solid 1px black">
-            </canvas>            
-            <br />
+        <div class="row align-items-start">
+            <div class="col">
+                <code class="alert-light">File Size (kB): @Model.FileSize</code>
+                <br />
+                <code class="alert-light">File saved location: @Model.SavedFilePath</code>
+                <br />
+                <label class="alert-info">Click the button below to start running OCR using Azure AI</label>
+            </div>
+            <div class="col">
+                <br />
+                <br />
+                <button type="submit">Submit</button> <button style="margin-left:200px" type="button" class="btn-outline-info" @onclick="@CopyTextToClipboard">Copy to clipboard</button>
+                <br />
+                <br />
+            </div>
         </div>
-
-        <code class="alert-light">File Size (kB): @Model.FileSize</code>
-        <br />
-        <code class="alert-light">File saved location: @Model.SavedFilePath</code>
-        <br />
-
-        <label class="alert-info">Click the button below to start running OCR using Azure AI</label>
-
-        <br />
-        <br />
-        <button type="submit">Submit</button> <button style="margin-left:200px" type="button" class="btn-outline-info" @onclick="@CopyTextToClipboard">Copy to clipboard</button>
-        <br />
-        <br />
-        <InputTextArea style="width:1000px;height:300px" readonly="readonly" placeholder="Detected text in the image uploaded" @bind-Value="Model!.ImageAnalysisOutputText" rows="5"></InputTextArea>
-    }
+        <div class="row align-items-start">
+            <div class="col">
+                <InputTextArea style="width:1000px;height:300px" readonly="readonly" placeholder="Detected text in the image uploaded" @bind-Value="Model!.ImageAnalysisOutputText" rows="5"></InputTextArea>
+            </div>
+        </div>
+    </div>
 </EditForm>
-
-
-@code {
-
-    private IndexModel Model = new();
-
-    //https://learn.microsoft.com/en-us/azure/ai-services/computer-vision/how-to/call-analyze-image-40?WT.mc_id=twitter&pivots=programming-language-csharp
-
-    private string ImageInfo = string.Empty;
-
-    private async Task Submit()
-    {
-        if (Model.PreviewImageUrl == null || Model.SavedFilePath == null)
-        {
-            await Application.Current.MainPage.DisplayAlert($"MAUI Blazor Image Analyzer App", $"You must select an image first before running Image Analysis. Supported formats are .jpeg, .jpg and .png", "Ok", "Cancel");
-            return;
-        }
-
-        using var imageAnalyzer = await ImageAnalyzerService.CreateImageAnalyzer(Model.SavedFilePath);
-
-        ImageAnalysisResult analysisResult = await imageAnalyzer.AnalyzeAsync();
-
-        if (analysisResult.Reason == ImageAnalysisResultReason.Analyzed)
-        {
-            Model.ImageAnalysisOutputText = analysisResult.OutputImageAnalysisResult();
-            var sb = new StringBuilder();
-            sb.AppendLine(@"[");
-
-            int objectIndex = 0;
-            foreach (var detectedObject in analysisResult.Objects){
-                sb.Append($"{{ \"Name\": \"{detectedObject.Name}\", \"Y\": {detectedObject.BoundingBox.Y}, \"X\": {detectedObject.BoundingBox.X}, \"Height\": {detectedObject.BoundingBox.Height}, \"Width\": {detectedObject.BoundingBox.Width}, \"Confidence\": \"{detectedObject.Confidence:0.0000}\" }}");
-                objectIndex++;
-                if (objectIndex < analysisResult.Objects?.Count)
-                {
-                    sb.Append($",{Environment.NewLine}");                    
-                }
-                else
-                {
-                    sb.Append($"{Environment.NewLine}");
-                }
-            }
-            sb.Remove(sb.Length - 2, 1); //remove trailing comma at the end
-            sb.AppendLine(@"]");
-            await JsRunTime.InvokeVoidAsync("LoadBoundingBoxes", sb.ToString());
-
-        }
-        else
-        {
-            ImageInfo = $"The image analysis did not perform its analysis. Reason: {analysisResult.Reason}";
-        }
-
-
-        StateHasChanged(); //visual refresh here
-    }
-
-    private async Task CopyTextToClipboard()
-    {
-        await Clipboard.SetTextAsync(Model.ImageAnalysisOutputText);
-        await Application.Current.MainPage.DisplayAlert($"MAUI Blazor Image Analyzer App", $"The copied text was put into the clipboard. Character length: {Model.ImageAnalysisOutputText?.Length}", "Ok", "Cancel");
-    }
-
-    private async Task OnInputFile(InputFileChangeEventArgs args)
-    {
-        var imageSaveModel = await ImageSaveService.SaveImage(args.File);
-        Model = new IndexModel(imageSaveModel);
-        await Application.Current.MainPage.DisplayAlert($"MAUI Blazor ImageAnalyzer app App", $"Wrote file to location : {Model.SavedFilePath} Size is: {Model.FileSize} kB", "Ok", "Cancel");
-    }  
-
-
-}
