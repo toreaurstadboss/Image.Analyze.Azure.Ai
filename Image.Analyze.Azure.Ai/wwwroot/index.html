@@ -26,6 +26,8 @@
 
 	<script type="text/javascript">
 
+		var colorPalette = ["red", "yellow", "blue", "green", "fuchsia", "moccasin", "purple", "magenta", "aliceblue", "lightyellow", "lightgreen" ]; 
+
 		function rescaleCanvas() {
             var img = document.getElementById('PreviewImage');
             var canvas = document.getElementById('PreviewImageBbox');
@@ -33,15 +35,20 @@
             canvas.height = img.height;
 		}
 
+		function getColor() {
+			var colorIndex = parseInt(Math.random() * 10);
+			var color = colorPalette[colorIndex];
+			return color;
+		}
+
 		function LoadBoundingBoxes(objectDescriptions) {
 			if (objectDescriptions == null || objectDescriptions == false) {
                 alert('did not find any objects in image. returning from calling load bounding boxes : ' + objectDescriptions);
-
 				return;
 			}
-			debugger;
+
 			var objectDesc = JSON.parse(objectDescriptions);
-			alert('calling load bounding boxes, starting analysis on clientside js : ' + objectDescriptions);
+			//alert('calling load bounding boxes, starting analysis on clientside js : ' + objectDescriptions);
 
 			rescaleCanvas();
             var canvas = document.getElementById('PreviewImageBbox');
@@ -59,7 +66,7 @@
 			}
 
 			for (var i = 0; i < objectDesc.length; i++) {
-				ctx.fillStyle = "blue";
+				ctx.fillStyle = getColor();
 				ctx.globalAlpha = 0.2;
 				ctx.fillRect(objectDesc[i].X, objectDesc[i].Y, objectDesc[i].Width, objectDesc[i].Height);
 				ctx.stroke();
