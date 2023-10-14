@@ -7,6 +7,8 @@ public class IndexModel
     public string ImageAnalysisOutputText { get; set; }
     public string SavedFilePath { get; set; }
     public string PreviewImageUrl { get; set; }
+    public string Caption { get; set; }
+    public List<string> Tags { get; set; } = new();
 
 
     public IndexModel()

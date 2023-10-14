@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 	<title>Image.Analyze.Azure.Ai</title>
 	<base href="/" />
-	<link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 	<link href="css/app.css" rel="stylesheet" />
 	<link href="Image.Analyze.Azure.Ai.styles.css" rel="stylesheet" />
 </head>
@@ -26,13 +27,13 @@
 
 	<script type="text/javascript">
 
-		var colorPalette = ["red", "yellow", "blue", "green", "fuchsia", "moccasin", "purple", "magenta", "aliceblue", "lightyellow", "lightgreen" ]; 
+		var colorPalette = ["red", "yellow", "blue", "green", "fuchsia", "moccasin", "purple", "magenta", "aliceblue", "lightyellow", "lightgreen"];
 
 		function rescaleCanvas() {
-            var img = document.getElementById('PreviewImage');
-            var canvas = document.getElementById('PreviewImageBbox');
-            canvas.width = img.width;
-            canvas.height = img.height;
+			var img = document.getElementById('PreviewImage');
+			var canvas = document.getElementById('PreviewImageBbox');
+			canvas.width = img.width;
+			canvas.height = img.height;
 		}
 
 		function getColor() {
@@ -43,7 +44,7 @@
 
 		function LoadBoundingBoxes(objectDescriptions) {
 			if (objectDescriptions == null || objectDescriptions == false) {
-                alert('did not find any objects in image. returning from calling load bounding boxes : ' + objectDescriptions);
+				alert('did not find any objects in image. returning from calling load bounding boxes : ' + objectDescriptions);
 				return;
 			}
 
@@ -51,9 +52,9 @@
 			//alert('calling load bounding boxes, starting analysis on clientside js : ' + objectDescriptions);
 
 			rescaleCanvas();
-            var canvas = document.getElementById('PreviewImageBbox');
-            var img = document.getElementById('PreviewImage');
-			
+			var canvas = document.getElementById('PreviewImageBbox');
+			var img = document.getElementById('PreviewImage');
+
 			var ctx = canvas.getContext('2d');
 			ctx.drawImage(img, img.width, img.height);
 
@@ -65,7 +66,7 @@
 				ctx.lineWidth = 1;
 				ctx.fillText(objectDesc[i].Name, objectDesc[i].X + objectDesc[i].Width / 2, objectDesc[i].Y + objectDesc[i].Height / 2);
 				ctx.fillText("Confidence: " + objectDesc[i].Confidence, objectDesc[i].X + objectDesc[i].Width / 2, 10 + objectDesc[i].Y + objectDesc[i].Height / 2);
- 			}
+			}
 
 			for (var i = 0; i < objectDesc.length; i++) {
 				ctx.fillStyle = getColor();
@@ -73,14 +74,14 @@
 				ctx.fillRect(objectDesc[i].X, objectDesc[i].Y, objectDesc[i].Width, objectDesc[i].Height);
 				ctx.lineWidth = 3;
 				ctx.strokeStyle = "blue";
-                ctx.rect(objectDesc[i].X, objectDesc[i].Y, objectDesc[i].Width, objectDesc[i].Height);
+				ctx.rect(objectDesc[i].X, objectDesc[i].Y, objectDesc[i].Width, objectDesc[i].Height);
 				ctx.fillStyle = "black";
 				ctx.fillText("Color: " + getColor(), objectDesc[i].X + objectDesc[i].Width / 2, 20 + objectDesc[i].Y + objectDesc[i].Height / 2);
 
 				ctx.stroke();
 			}
 
-            ctx.drawImage(img, 0, 0);
+			ctx.drawImage(img, 0, 0);
 
 
 			console.log('got these object descriptions:');

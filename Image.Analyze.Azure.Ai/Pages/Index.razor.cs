@@ -31,33 +31,15 @@ namespace Image.Analyze.Azure.Ai.Pages
             if (analysisResult.Reason == ImageAnalysisResultReason.Analyzed)
             {
                 Model.ImageAnalysisOutputText = analysisResult.OutputImageAnalysisResult();
-                var sb = new StringBuilder();
-                sb.AppendLine(@"[");
-
-                int objectIndex = 0;
-                foreach (var detectedObject in analysisResult.Objects)
-                {
-                    sb.Append($"{{ \"Name\": \"{detectedObject.Name}\", \"Y\": {detectedObject.BoundingBox.Y}, \"X\": {detectedObject.BoundingBox.X}, \"Height\": {detectedObject.BoundingBox.Height}, \"Width\": {detectedObject.BoundingBox.Width}, \"Confidence\": \"{detectedObject.Confidence:0.0000}\" }}");
-                    objectIndex++;
-                    if (objectIndex < analysisResult.Objects?.Count)
-                    {
-                        sb.Append($",{Environment.NewLine}");
-                    }
-                    else
-                    {
-                        sb.Append($"{Environment.NewLine}");
-                    }
-                }
-                sb.Remove(sb.Length - 2, 1); //remove trailing comma at the end
-                sb.AppendLine(@"]");
-                await JsRunTime.InvokeVoidAsync("LoadBoundingBoxes", sb.ToString());
-
+                Model.Caption = $"{analysisResult.Caption.Content} Confidence: {analysisResult.Caption.Confidence.ToString("F2")}";
+                Model.Tags = analysisResult.Tags.Select(t => $"{t.Name} (Confidence: {t.Confidence.ToString("F2")})").ToList();
+                var jsonBboxes = analysisResult.GetBoundingBoxesJson();
+                await JsRunTime.InvokeVoidAsync("LoadBoundingBoxes", jsonBboxes);
             }
             else
             {
                 ImageInfo = $"The image analysis did not perform its analysis. Reason: {analysisResult.Reason}";
             }
-
 
             StateHasChanged(); //visual refresh here
         }

@@ -16,20 +16,27 @@ App that load and analyze using Azure Cognitive Services - Image Vision Analyzin
 
 <span>@ImageInfo</span>
 
-<EditForm Model="Model" OnValidSubmit="@Submit" style="background-color:aliceblue">
+<EditForm Model="Model" OnValidSubmit="@Submit">
     <DataAnnotationsValidator />
 
-    <div>
-        <label><b>Select a picture to run Image Analysis with</b></label><br />
-        <InputFile OnChange="@OnInputFile" accept=".jpeg,.jpg,.png" />
+    <div class="container">
+        <div class="row align-items-start">
+            <div class="col">
 
-        <br />
-        <code class="alert-secondary">Supported file formats: .jpeg, .jpg and .png</code>
-        <br />
+                <label><b>Select a picture to run Image Analysis with</b></label><br />
+                <InputFile OnChange="@OnInputFile" accept=".jpeg,.jpg,.png" />
+                <br />
+                <code class="alert-secondary">Supported file formats: .jpeg, .jpg and .png</code>
+                <br />
+            </div>
+        </div>
+        <div class="col">
+            <h3 class="FancyCaption">@Model.Caption</h3>
+        </div>
     </div>
 
-    <div class="container">
-       <div class="row align-items-start">         
+    <div class="container overflow-scroll">
+        <div class="row align-items-start">
             <div class="col overflow-scroll">
                 <label class="alert-info">Preview of the selected image</label>
                 <div>
@@ -54,14 +61,26 @@ App that load and analyze using Azure Cognitive Services - Image Vision Analyzin
             <div class="col">
                 <br />
                 <br />
-                <button type="submit">Submit</button> <button style="margin-left:200px" type="button" class="btn-outline-info" @onclick="@CopyTextToClipboard">Copy to clipboard</button>
+                <button class="btn btn-outline-success" title="Click this button to run analysis on selected image" type="submit">Submit</button> <button style="margin-left:200px" type="button" class="btn-outline-info" @onclick="@CopyTextToClipboard">Copy to clipboard</button>
                 <br />
                 <br />
             </div>
         </div>
         <div class="row align-items-start">
             <div class="col">
-                <InputTextArea style="width:1000px;height:300px" readonly="readonly" placeholder="Detected text in the image uploaded" @bind-Value="Model!.ImageAnalysisOutputText" rows="5"></InputTextArea>
+                <InputTextArea style="width:500px;height:300px" readonly="readonly" placeholder="Detected text in the image uploaded" @bind-Value="Model!.ImageAnalysisOutputText" rows="5"></InputTextArea>
+            </div>
+            <div class="col">
+                <table class="table">
+                    <th>Tags extracted from the image</th>
+                    @foreach (var tag in @Model.Tags)
+                    {
+                        <tr>
+                            <td>@tag</td>
+                        </tr>
+                    }
+                </table>
+
             </div>
         </div>
     </div>

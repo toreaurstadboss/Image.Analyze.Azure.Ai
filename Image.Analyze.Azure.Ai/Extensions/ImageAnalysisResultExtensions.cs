@@ -6,6 +6,30 @@ namespace Image.Analyze.Azure.Ai.Extensions
     public static class ImageAnalysisResultExtensions
     {
 
+        public static string GetBoundingBoxesJson(this ImageAnalysisResult result)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine(@"[");
+
+            int objectIndex = 0;
+            foreach (var detectedObject in result.Objects)
+            {
+                sb.Append($"{{ \"Name\": \"{detectedObject.Name}\", \"Y\": {detectedObject.BoundingBox.Y}, \"X\": {detectedObject.BoundingBox.X}, \"Height\": {detectedObject.BoundingBox.Height}, \"Width\": {detectedObject.BoundingBox.Width}, \"Confidence\": \"{detectedObject.Confidence:0.0000}\" }}");
+                objectIndex++;
+                if (objectIndex < result.Objects?.Count)
+                {
+                    sb.Append($",{Environment.NewLine}");
+                }
+                else
+                {
+                    sb.Append($"{Environment.NewLine}");
+                }
+            }
+            sb.Remove(sb.Length - 2, 1); //remove trailing comma at the end
+            sb.AppendLine(@"]");
+            return sb.ToString();
+        }
+
         public static string OutputImageAnalysisResult(this ImageAnalysisResult result)
         {
             var sb = new StringBuilder();
