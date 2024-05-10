@@ -50,10 +50,6 @@
         <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
     </ItemGroup>
 
-    <ItemGroup>
-      <None Remove="miss-africa.jpg" />
-    </ItemGroup>
-
 	<ItemGroup>
 		<PackageReference Include="Azure.AI.Vision.ImageAnalysis" Version="0.15.1-beta.1" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="8.0.7" />
@@ -63,14 +59,18 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Content Update="wwwroot\miss-africa.jpg">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
+	  <Folder Include="wwwroot\css\bootstrap5\" />
+	  <Folder Include="wwwroot\js\" />
+	  <Folder Include="wwwroot\SampleImages\" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="wwwroot\css\bootstrap5\" />
-	  <Folder Include="wwwroot\js\" />
+	  <Content Update="wwwroot\SampleImages\delfiner.webp">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	  <Content Update="wwwroot\SampleImages\jobinterview.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
 	</ItemGroup>
 
 </Project>
