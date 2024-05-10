@@ -1,165 +1,84 @@
-﻿
-
-@page "/"
+﻿@page "/"
 @using System.Text;
+@using Image.Analyze.Azure.Ai.Lib;
+@using Image.Analyze.Azure.Ai.Models;
+@using Ocr.Handwriting.Azure.AI.Services;
 @using global::Azure.AI.Vision.Common;
 @using global::Azure.AI.Vision.ImageAnalysis;
 @using global::Azure;
+@using Image.Analyze.Azure.Ai.Extensions;
 
-<h1>Hello, world!</h1>
+@inject IImageSaveService ImageSaveService
+@inject IImageAnalyzerService ImageAnalyzerService
+@inject IJSRuntime JsRunTime
 
-Welcome to your new app.
+App that load and analyze using Azure Cognitive Services - Image Vision Analyzing service.
+
 <span>@ImageInfo</span>
 
+<EditForm Model="Model" OnValidSubmit="@Submit">
+    <DataAnnotationsValidator />
 
-@code {
-    //https://learn.microsoft.com/en-us/azure/ai-services/computer-vision/how-to/call-analyze-image-40?WT.mc_id=twitter&pivots=programming-language-csharp
+    <div class="container">
+        <div class="row align-items-start">
+            <div class="col">
 
-    private string ImageInfo = "";
+                <label><b>Select a picture to run Image Analysis with</b></label><br />
+                <InputFile OnChange="@OnInputFile" accept=".jpeg,.jpg,.png" />
+                <br />
+                <code class="alert-secondary">Supported file formats: .jpeg, .jpg and .png</code>
+                <br />
+            </div>
+        </div>
+        <div class="col">
+            <h3 class="FancyCaption">@Model.Caption</h3>
+        </div>
+    </div>
 
-    protected override async Task OnParametersSetAsync()
-    {
-
-        using var stream = await FileSystem.OpenAppPackageFileAsync("wwwroot/miss-africa.jpg");
-
-        using var reader = new StreamReader(stream);
-        byte[] imageBuffer;
-        using (var streamReader = new MemoryStream())
-        {
-            stream.CopyTo(streamReader);
-            imageBuffer = streamReader.ToArray();
-        }
-
-        using var imageSourceBuffer = new ImageSourceBuffer();
-        imageSourceBuffer.GetWriter().Write(imageBuffer);
-        using var imageSource = VisionSource.FromImageSourceBuffer(imageSourceBuffer);
-
-
-        var analysisOptions = new ImageAnalysisOptions()  
-        {
-            Language = "en",
-            GenderNeutralCaption = false,
-                Features =
-              ImageAnalysisFeature.CropSuggestions
-            | ImageAnalysisFeature.Caption
-            | ImageAnalysisFeature.DenseCaptions
-            | ImageAnalysisFeature.Objects
-            | ImageAnalysisFeature.People
-            | ImageAnalysisFeature.Text
-            | ImageAnalysisFeature.Tags
-        };
-
-        string key = Environment.GetEnvironmentVariable("AZURE_COGNITIVE_SERVICES_VISION_SECONDARY_KEY");
-        string endpoint = Environment.GetEnvironmentVariable("AZURE_COGNITIVE_SERVICES_VISION_SECONDARY_ENDPOINT");
-
-        var visionServiceOptions = new VisionServiceOptions(new Uri(endpoint), new AzureKeyCredential(key));
-
-    //using var  imageSource = VisionSource.FromUrl(
-    //new Uri("https://learn.microsoft.com/azure/ai-services/computer-vision/media/quickstarts/presentation.png"));
-
-        using var analyzer = new ImageAnalyzer(visionServiceOptions, imageSource, analysisOptions);
-
-        ImageInfo = "";
-
-        var result = await analyzer.AnalyzeAsync();
-        var sb = new StringBuilder();
-
-        if (result.Reason == ImageAnalysisResultReason.Analyzed)
-        {
-
-            sb.AppendLine($" Image height = {result.ImageHeight}");
-            sb.AppendLine($" Image width = {result.ImageWidth}");
-            sb.AppendLine($" Model version = {result.ModelVersion}");
-
-            if (result.Caption != null)
-            {
-                sb.AppendLine(" Caption:");
-                sb.AppendLine($"   \"{result.Caption.Content}\", Confidence {result.Caption.Confidence:0.0000}");
-            }
-
-            if (result.DenseCaptions != null)
-            {
-                sb.AppendLine(" Dense Captions:");
-                foreach (var caption in result.DenseCaptions)
-                {
-                    sb.AppendLine($"   \"{caption.Content}\", Bounding box {caption.BoundingBox}, Confidence {caption.Confidence:0.0000}");
-                }
-            }
-
-            if (result.Objects != null)
-            {
-                sb.AppendLine(" Objects:");
-                foreach (var detectedObject in result.Objects)
-                {
-                    sb.AppendLine($"   \"{detectedObject.Name}\", Bounding box {detectedObject.BoundingBox}, Confidence {detectedObject.Confidence:0.0000}");
-                }
-            }
-
-            if (result.Tags != null)
-            {
-                sb.AppendLine($" Tags:");
-                foreach (var tag in result.Tags)
-                {
-                    sb.AppendLine($"   \"{tag.Name}\", Confidence {tag.Confidence:0.0000}");
-                }
-            }
-
-            if (result.People != null)
-            {
-                sb.AppendLine($" People:");
-                foreach (var person in result.People)
-                {
-                    sb.AppendLine($"   Bounding box {person.BoundingBox}, Confidence {person.Confidence:0.0000}");
-                }
-            }
-
-            if (result.CropSuggestions != null)
-            {
-                sb.AppendLine($" Crop Suggestions:");
-                foreach (var cropSuggestion in result.CropSuggestions)
-                {
-                    sb.AppendLine($"   Aspect ratio {cropSuggestion.AspectRatio}: "
-                        + $"Crop suggestion {cropSuggestion.BoundingBox}");
-                };
-            }
-
-            if (result.Text != null)
-            {
-                sb.AppendLine($" Text:");
-                foreach (var line in result.Text.Lines)
-                {
-                    string pointsToString = "{" + string.Join(',', line.BoundingPolygon.Select(pointsToString => pointsToString.ToString())) + "}";
-                    sb.AppendLine($"   Line: '{line.Content}', Bounding polygon {pointsToString}");
-
-                    foreach (var word in line.Words)
+    <div class="container overflow-scroll">
+        <div class="row align-items-start">
+            <div class="col overflow-scroll">
+                <label class="alert-info">Preview of the selected image</label>
+                <div>
+                    <img id="PreviewImage" style="min-width:640px;min-height:359px;border:1px solid black;" src="@Model.PreviewImageUrl" onload="rescaleCanvas()" /><br />
+                </div>
+            </div>
+            <div class="col overflow-scroll">
+                <label class="alert-info">Image with bounding boxes</label>
+                <canvas id="PreviewImageBbox" style="border:solid 1px black">
+                </canvas>
+                <br />
+            </div>
+        </div>
+        <div class="row align-items-start">
+            <div class="col">
+                <code class="alert-light">File Size (kB): @Model.FileSize</code>
+                <code class="alert-light">File saved location: @Model.SavedFilePath</code>
+            </div>
+            <div class="col">
+                <br />
+                <br />
+                <button class="btn btn-outline-success" title="Click this button to run analysis on selected image" type="submit">Submit</button> <button style="margin-left:200px" type="button" class="btn-outline-info" @onclick="@CopyTextToClipboard">Copy to clipboard</button>
+                <br />
+                <br />
+            </div>
+        </div>
+        <div class="row align-items-start">
+            <div class="col">
+                <InputTextArea style="width:500px;height:300px" readonly="readonly" placeholder="Detected text in the image uploaded" @bind-Value="Model!.ImageAnalysisOutputText" rows="5"></InputTextArea>
+            </div>
+            <div class="col">
+                <table class="table">
+                    <th>Tags extracted from the image</th>
+                    @foreach (var tag in @Model.Tags)
                     {
-                        pointsToString = "{" + string.Join(',', word.BoundingPolygon.Select(pointsToString => pointsToString.ToString())) + "}";
-                        sb.AppendLine($"     Word: '{word.Content}', Bounding polygon {pointsToString}, Confidence {word.Confidence:0.0000}");
+                        <tr>
+                            <td>@tag</td>
+                        </tr>
                     }
-                }
-            }
+                </table>
 
-            var resultDetails = ImageAnalysisResultDetails.FromResult(result);
-            sb.AppendLine($" Result details:");
-            sb.AppendLine($"   Image ID = {resultDetails.ImageId}");
-            sb.AppendLine($"   Result ID = {resultDetails.ResultId}");
-            sb.AppendLine($"   Connection URL = {resultDetails.ConnectionUrl}");
-            sb.AppendLine($"   JSON result = {resultDetails.JsonResult}");
-        }
-        else
-        {
-            var errorDetails = ImageAnalysisErrorDetails.FromResult(result);
-            sb.AppendLine(" Analysis failed.");
-            sb.AppendLine($"   Error reason : {errorDetails.Reason}");
-            sb.AppendLine($"   Error code : {errorDetails.ErrorCode}");
-            sb.AppendLine($"   Error message: {errorDetails.Message}");
-        }
-
-        ImageInfo = sb.ToString();
-
-    }
-    
-
-
-
-}
+            </div>
+        </div>
+    </div>
+</EditForm>

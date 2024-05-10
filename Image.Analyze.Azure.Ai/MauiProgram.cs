@@ -1,27 +1,30 @@
-﻿using Microsoft.AspNetCore.Components.WebView.Maui;
-using Image.Analyze.Azure.Ai.Data;
+﻿using Image.Analyze.Azure.Ai.Lib;
+using Ocr.Handwriting.Azure.AI.Services;
+using TextCopy;
 
-namespace Image.Analyze.Azure.Ai;
-
-public static class MauiProgram
+namespace Image.Analyze.Azure.Ai
 {
-	public static MauiApp CreateMauiApp()
-	{
-		var builder = MauiApp.CreateBuilder();
-		builder
-			.UseMauiApp<App>()
-			.ConfigureFonts(fonts =>
-			{
-				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
-			});
+    public static class MauiProgram
+    {
+        public static MauiApp CreateMauiApp()
+        {
+            var builder = MauiApp.CreateBuilder();
+            builder
+                .UseMauiApp<App>()
+                .ConfigureFonts(fonts =>
+                {
+                    fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
+                });
 
-		builder.Services.AddMauiBlazorWebView();
-		#if DEBUG
-		builder.Services.AddBlazorWebViewDeveloperTools();
+            builder.Services.AddMauiBlazorWebView();
+#if DEBUG
+            builder.Services.AddBlazorWebViewDeveloperTools();
 #endif
-		
-		builder.Services.AddSingleton<WeatherForecastService>();
 
-		return builder.Build();
-	}
+            builder.Services.AddScoped<IImageSaveService, ImageSaveService>();
+            builder.Services.AddScoped<IImageAnalyzerService, ImageAnalyzerService>();
+            builder.Services.InjectClipboard();
+            return builder.Build();
+        }
+    }
 }
