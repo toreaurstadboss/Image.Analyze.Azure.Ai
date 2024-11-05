@@ -1,12 +1,13 @@
 ﻿@page "/"
 @using System.Text;
-@using Image.Analyze.Azure.Ai.Lib;
+@using Image.Analyze.Azure.Ai.Services;
 @using Image.Analyze.Azure.Ai.Models;
 @using Ocr.Handwriting.Azure.AI.Services;
 @using global::Azure.AI.Vision.Common;
 @using global::Azure.AI.Vision.ImageAnalysis;
 @using global::Azure;
 @using Image.Analyze.Azure.Ai.Extensions;
+    using Image.Analyze.Azure.Ai.Services;
 
 @inject IImageSaveService ImageSaveService
 @inject IImageAnalyzerService ImageAnalyzerService

@@ -2,13 +2,13 @@
 
 public class IndexModel
 {
-    public string FilePath { get; set; }
+    public string? FilePath { get; set; }
     public long FileSize { get; set; }
-    public string ImageAnalysisOutputText { get; set; }
-    public string SavedFilePath { get; set; }
-    public string PreviewImageUrl { get; set; }
-    public string Caption { get; set; }
-    public List<string> Tags { get; set; } = new();
+    public string? ImageAnalysisOutputText { get; set; }
+    public string? SavedFilePath { get; set; }
+    public string? PreviewImageUrl { get; set; }
+    public string? Caption { get; set; }
+    public List<string> Tags { get; set; } = [];
 
 
     public IndexModel()

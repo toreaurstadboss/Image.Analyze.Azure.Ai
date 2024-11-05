@@ -13,6 +13,8 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <EnableDefaultCssItems>false</EnableDefaultCssItems>
 
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
         <!-- Display name -->
         <ApplicationTitle>Image.Analyze.Azure.Ai</ApplicationTitle>
 

@@ -2,16 +2,22 @@
 using Azure.AI.Vision.Common;
 using Azure.AI.Vision.ImageAnalysis;
 
-namespace Image.Analyze.Azure.Ai.Lib
+namespace Image.Analyze.Azure.Ai.Services
 {
 
     public class ImageAnalyzerService : IImageAnalyzerService
     {
 
-        public async Task<ImageAnalyzer> CreateImageAnalyzer(string imageFile)
+        public async Task<ImageAnalyzer?> CreateImageAnalyzer(string imageFile)
         {
-            string key = Environment.GetEnvironmentVariable("AZURE_COGNITIVE_SERVICES_VISION_SECONDARY_KEY");
-            string endpoint = Environment.GetEnvironmentVariable("AZURE_COGNITIVE_SERVICES_VISION_SECONDARY_ENDPOINT");
+            string? key = Environment.GetEnvironmentVariable("AZURE_COGNITIVE_SERVICES_VISION_SECONDARY_KEY");
+            string? endpoint = Environment.GetEnvironmentVariable("AZURE_COGNITIVE_SERVICES_VISION_SECONDARY_ENDPOINT");
+
+            if (key == null || endpoint == null)
+            {
+                return null;
+            }
+
             var visionServiceOptions = new VisionServiceOptions(new Uri(endpoint), new AzureKeyCredential(key));
 
             using VisionSource visionSource = CreateVisionSource(imageFile);
@@ -19,8 +25,7 @@ namespace Image.Analyze.Azure.Ai.Lib
             var analysisOptions = CreateImageAnalysisOptions();
 
             var analyzer = new ImageAnalyzer(visionServiceOptions, visionSource, analysisOptions);
-            return analyzer;
-
+            return await Task.FromResult(analyzer); //just to stay async here
         }
 
         private static VisionSource CreateVisionSource(string imageFile)
@@ -39,7 +44,7 @@ namespace Image.Analyze.Azure.Ai.Lib
             return VisionSource.FromImageSourceBuffer(imageSourceBuffer);
         }
 
-        private static ImageAnalysisOptions CreateImageAnalysisOptions() => new ImageAnalysisOptions
+        private static ImageAnalysisOptions CreateImageAnalysisOptions() => new()
         {
             Language = "en",
             GenderNeutralCaption = false,

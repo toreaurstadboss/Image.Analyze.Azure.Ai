@@ -1,4 +1,4 @@
-﻿using Image.Analyze.Azure.Ai.Lib;
+﻿using Image.Analyze.Azure.Ai.Services;
 using Ocr.Handwriting.Azure.AI.Services;
 using TextCopy;
 
