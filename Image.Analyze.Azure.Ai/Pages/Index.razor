@@ -7,17 +7,16 @@
 @using global::Azure.AI.Vision.ImageAnalysis;
 @using global::Azure;
 @using Image.Analyze.Azure.Ai.Extensions;
-    using Image.Analyze.Azure.Ai.Services;
 
 @inject IImageSaveService ImageSaveService
 @inject IImageAnalyzerService ImageAnalyzerService
 @inject IJSRuntime JsRunTime
 
-App that load and analyze using Azure Cognitive Services - Image Vision Analyzing service.
+<h4>App that load and analyze using Azure Cognitive Services - Image Vision Analyzing service.</h4>
 
 <span>@ImageInfo</span>
 
-<EditForm Model="Model" OnValidSubmit="@Submit">
+<EditForm Model="Model" OnValidSubmit="@Submit" style="background-color:aliceblue">
     <DataAnnotationsValidator />
 
     <div class="container">
